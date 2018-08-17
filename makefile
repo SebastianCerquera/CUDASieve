@@ -8,12 +8,12 @@
 
 # Location of the CUDA toolkit
 # In ubuntu (all debian based distros?) this is /usr/local/cuda
-CUDA_DIR = /opt/cuda
+CUDA_DIR = /usr/local/cuda-9.0
 # Location of the *necessary* legacy gcc compiler for nvcc to use.  Maximum
 # supported version is 5.4.  In ubuntu, this will be located in /usr/bin/
 # from scratch: sudo apt install g++-4.9
 # then change LEGACY_CC_PATH to /usr/bin/g++-4.9
-LEGACY_CC_PATH = /bin/g++-5
+LEGACY_CC_PATH = /usr/bin/g++-5
 # Compute capability of the target GPU
 GPU_ARCH = compute_30
 GPU_CODE = sm_30,sm_32,sm_35,sm_37,sm_50,sm_52,sm_53,sm_60,sm_61,sm_62
@@ -58,6 +58,14 @@ all: $(MAIN) commands
 
 test: cstest
 
+vars: 
+	@echo "      CS_LIB     " $(CS_LIB)
+	@echo "        OBJS     " $(OBJS)
+	@echo "       NVOBJS     " $(NVOBJS)
+	@echo "     SRC_DIR     " $(SRC_DIR)
+	@echo "     MAIN_OBJ     " $(MAIN_OBJ)
+	@echo "    _MAIN_OBJ     " $(_MAIN_OBJ)
+
 # Tack on a main() function for the CLI
 $(MAIN): $(MAIN_OBJ) $(CS_LIB)
 	@$(NVCC) $(NVCC_FLAGS) $(CC_LIBS) $(LIB_DIR) -l$(MAIN) $< -o $@
@@ -68,11 +76,13 @@ $(CS_LIB): $(OBJS) $(NVOBJS)
 	@$(NVCC) $(NVCC_FLAGS) -lib $(INCLUDES) $^ -o $@
 	@echo "     CUDALS   " $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu obj/
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu obj/	
+	@echo "     command     " ${NVCC} ${NVCC_FLAGS}
 	@$(NVCC) $(NVCC_FLAGS) -c $(INCLUDES) -o $@ $<
 	@echo "     CUDA     " $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp obj/
+	@echo "        INCLUDES     " $(INCLUDES)
 	@$(CC) $(CCFLAGS) $(INCLUDES) $(WIGNORE) -o $@ $<
 	@echo "     CXX      " $@
 
